@@ -4,22 +4,29 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 
 public class Datamuse {
 	
 	private String url = "";
-	
-    public Datamuse(){}
     
+    /**
+     * Starts the first step in the builder process.
+     * 
+     * @return Datamuse
+     */
     public Datamuse QueryBuilder() {
     	this.url = "http://api.datamuse.com/words?";
     	return this;
     }
     
+    /**
+     * Adds the 'ml' (means like) endpoint to the query.
+     * 
+     * @param word The word to query, as a String
+     * @return Datamuse
+     */
     public Datamuse meansLike(String word) {
     	word = word.replaceAll(" ", "+");
     	if (this.url.equals("http://api.datamuse.com/words?")) {
@@ -27,40 +34,31 @@ public class Datamuse {
     	} else {
     		this.url += "&ml=" + word;
     	}
-    	System.out.println(this.url);
     	return this;
     }
     
+    /**
+     * Adds a max word limit endpoint to the query.
+     * 
+     * @param limit The maximum number of words to be returned, as an int
+     * @return Datamuse
+     */
     public Datamuse max(int limit) {
     	if (this.url.equals("http://api.datamuse.com/words?")) {
     		this.url += "max=" + limit;
     	} else {
     		this.url += "&max=" + limit;
     	}
-    	System.out.println(this.url);
     	return this;
     }
     
-    public DatamuseObject[] query() {
-    	String pattern = "(http://api.datamuse.com/words\\?max=)[0-9]+";
-    	Pattern r = Pattern.compile(pattern);
-    	Matcher m = r.matcher(this.url);
-    	if (m.find()) {
-    		System.out.println("'max' is the only endpoint in the builder. Will return an empty array.");
-    	}
-    	return parseJson(url);
-    }
-
     /**
-     * Returns words that mean like the input, with a max number of words.
+     * Build the query and retrieve the array of JSON objects the is resulted.
      * 
-     * @param user_in word to be queried as a string
-     * @param sensitivity max number of words to return as an int
-     * @return Array of DatamuseObjects that contain the resulting words
+     * @return DatamuseObject[]
      */
-    public DatamuseObject[] meansLikeMax(String user_in, int sensitivity) {
-        String s = user_in.replaceAll(" ", "+");
-        return parseJson("http://api.datamuse.com/words?ml=" + s + "&max=" + sensitivity);
+    public DatamuseObject[] build() {
+    	return parseJson(url);
     }
     
     private static String readUrl(String urlString) throws Exception {
@@ -82,10 +80,10 @@ public class Datamuse {
         }
     }
     
-    static class DatamuseObject {
-        String word;
-        int score;
-        List<String> tags;
+    public static class DatamuseObject {
+        public String word;
+        public int score;
+        public List<String> tags;
     }
 
     private DatamuseObject[] parseJson(String url) {
@@ -95,7 +93,7 @@ public class Datamuse {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-        Gson gson = new Gson();        
+        Gson gson = new Gson();
         DatamuseObject[] page = gson.fromJson(json, DatamuseObject[].class);
         return page;
     }
